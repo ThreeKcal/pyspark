@@ -7,6 +7,8 @@
 - [ ] threekcal_model.db
 
 # 기능
+목적 : airflow로 저장된 predict.log파일을 읽어서 MariaDB에 있는 테이블을 업데이트하기!
+
 ```python
 spark = SparkSession.builder.appName("LogToMariaDB").getOrCreate()
 
