@@ -18,7 +18,7 @@ spark = SparkSession.builder \
     .appName("MyApp") \
     .getOrCreate()
 
-log_file_path = "path/to/your/logfile.csv"  # Replace with the path to your log file
+log_file_path = "logs"  # Replace with the path to your log file
 log_df = spark.read.csv(log_file_path, header=True, inferSchema=True)
 
 log_df.show()
@@ -43,7 +43,8 @@ try:
 
     # Step 5: Update NULL columns
     joined_df = db_df.join(log_df, on='num', how='inner')
-
+    print("this is the joined df")
+    joined_df.show()
     updated_df = joined_df \
         .withColumn("prediction_result", when(col("prediction_result").isNull(), col("log_prediction_result")).otherwise(col("prediction_result"))) \
         .withColumn("prediction_time", when(col("prediction_time").isNull(), col("log_prediction_time")).otherwise(col("prediction_time"))) \
@@ -67,8 +68,8 @@ try:
 except Exception as e:
     print(f"An error occurred: {e}")
 
-finally:
+#finally:
     # Close the connection
-    conn.close()
+ #   conn.close()
     # Stop the Spark session
-    spark.stop()
+  #  spark.stop()
