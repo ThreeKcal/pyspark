@@ -53,28 +53,31 @@ JOIN log_table log ON db.num = log.num""")
 
 df1 = result.toPandas()
 
-conn = get_conn()
-with conn:
-    with conn.cursor() as cursor:
-        #zip 사용은 추가 공부가 필요
-        params = list(zip(df1['prediction_result'], df1['prediction_score'], df1['prediction_time'], df1['num']))
-        cursor.executemany("""UPDATE comments
-        SET prediction_result=%s,
-            prediction_score=%s,
-            prediction_time=%s
-        WHERE num=%s
-        """, params)
+
+def get_prediction():
+    conn = get_conn()
+    with conn:
+        with conn.cursor() as cursor:
+            #zip 사용은 추가 공부가 필요
+            params = list(zip(df1['prediction_result'], df1['prediction_score'], df1['prediction_time'], df1['num']))
+            cursor.executemany("""UPDATE comments
+            SET prediction_result=%s,
+                prediction_score=%s,
+                prediction_time=%s
+            WHERE num=%s
+            """, params)
     
-        # 변경 사항을 커밋
-        conn.commit()
+            # 변경 사항을 커밋
+            conn.commit()
 
-    # 데이터 확인을 위해 SELECT 실행
-    with conn.cursor() as cursor:
-        sql_select = "SELECT * FROM comments"
-        cursor.execute(sql_select)
-        prediction = cursor.fetchall()
+        # 데이터 확인을 위해 SELECT 실행
+        with conn.cursor() as cursor:
+            sql_select = "SELECT * FROM comments"
+            cursor.execute(sql_select)
+            prediction = cursor.fetchall()
 
-        # 결과 출력
-        print(prediction)
+            # 결과 출력
+            print(prediction)
 
+get_prediction()
 spark.stop()
