@@ -5,7 +5,10 @@ description = "Default template for PDM package"
 authors = [
     {name = "sunwoo", email = "summerham22@gmail.com"},
 ]
-dependencies = []
+dependencies = [
+    "pyspark==3.5.3",
+    "threekcal-model @ git+https://github.com/ThreeKcal/model.git@sun/0.3.0",
+]
 requires-python = "==3.11.*"
 readme = "README.md"
 license = {text = "MIT"}

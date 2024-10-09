@@ -1,24 +1,16 @@
-# pyspark
+from pyspark.sql import SparkSession
+from threekcal_model.db import get_conn, select, dml
+import pandas as pd
+from pyspark.sql.types import StructType, StringType, FloatType, TimestampType, IntegerType, StructField
 
-![pyspark_proj](https://github.com/user-attachments/assets/c678225e-e5c0-4da0-9cac-b8025b5a8a74)
-
-## Dependencies
-- [ ] pyspark
-- [ ] threekcal_model.db
-
-# 기능
-목적 : airflow로 저장된 predict.log파일을 읽어서 MariaDB에 있는 테이블을 업데이트하기!
-
-```python
 spark = SparkSession.builder.appName("LogToMariaDB").getOrCreate()
 
 #Spark로 predict.log읽기
 log_file='predict.log'
 log_load = spark.read.csv("predict.log", header=True)
-```
-SparkSession을 열어서 predict.log파일을 읽은다
 
-```python
+#MariaDB로 연결하기
+
 def connection():
     conn = get_conn()
 
@@ -27,15 +19,27 @@ def connection():
             sql = "SELECT * FROM comments"
             cursor.execute(sql)
             result = cursor.fetchall()
-
+    
     return result
-
+   
 data = connection()
 df = pd.DataFrame(data)
-```
-threekcal.model.db.py에 있는 get_conn()을 사용하여 MariaDB로 연결한다
 
-```python
+# 스키마 정의
+schema = StructType([
+        StructField("num", IntegerType(), True),
+        StructField("comments", StringType(), True),
+        StructField("request_time", StringType(), True),
+        StructField("request_user", StringType(), True)
+    ])
+
+spark_df = spark.createDataFrame(df, schema=schema)
+
+#테이블 생성
+log_load.createOrReplaceTempView("log_table")
+spark_df.createOrReplaceTempView("db_table")
+
+#각 테이블을 조인
 result = spark.sql(f"""
 SELECT db.num as num,
         db.comments as comments,
@@ -48,10 +52,8 @@ FROM db_table db
 JOIN log_table log ON db.num = log.num""")
 
 df1 = result.toPandas()
-```
-result라는 table을 많들고 서버에 있는 DB와 logDB를 합치면서 NULL값 처리
 
-```python
+
 def get_prediction():
     conn = get_conn()
     with conn:
@@ -64,7 +66,7 @@ def get_prediction():
                 prediction_time=%s
             WHERE num=%s
             """, params)
-
+    
             # 변경 사항을 커밋
             conn.commit()
 
@@ -74,5 +76,8 @@ def get_prediction():
             cursor.execute(sql_select)
             prediction = cursor.fetchall()
 
-```
-마지막으로 MariaDB서버에 있는 테이블을 없데이트한다.
+            # 결과 출력
+            print(prediction)
+
+get_prediction()
+spark.stop()
